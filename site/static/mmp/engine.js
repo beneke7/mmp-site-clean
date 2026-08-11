@@ -107,6 +107,8 @@ const KIND = {
 //   name = op arg...            one object per line, in construction order
 //   claim collinear A B C
 //   claim concurrent e f g
+//   focus A B C                 objects shown in the student worksheet
+//   answer A 2                  optional author override for a degree
 //
 // Numbers are integers or fractions (3, -2, 5/7). `$t` is the animated
 // parameter. Text after `#` is a comment and is shown to the reader as the
@@ -114,11 +116,23 @@ const KIND = {
 
 export function parse(src) {
   const prog = [];
+  const focus = [];
+  const answers = Object.create(null);
   for (const raw of src.split('\n')) {
     const hash = raw.indexOf('#');
     const body = (hash >= 0 ? raw.slice(0, hash) : raw).trim();
     const note = hash >= 0 ? raw.slice(hash + 1).trim() : '';
     if (!body) continue;
+    if (body.startsWith('focus ')) {
+      focus.push(...body.slice(6).split(/\s+/).filter(Boolean));
+      continue;
+    }
+    if (body.startsWith('answer ')) {
+      const [, name, degree] = body.split(/\s+/);
+      if (!name || !/^\d+$/.test(degree || '')) throw new Error('invalid answer line: ' + raw);
+      answers[name] = Number(degree);
+      continue;
+    }
     if (body.startsWith('claim ')) {
       const [, op, ...args] = body.split(/\s+/);
       prog.push({ claim: true, op, args, note });
@@ -128,6 +142,8 @@ export function parse(src) {
       prog.push({ name: m[1], op: m[2], args: m[3].split(/\s+/).filter(Boolean), note });
     }
   }
+  prog.focus = focus;
+  prog.answers = answers;
   return prog;
 }
 
@@ -184,7 +200,7 @@ export function run(prog, R, tval) {
       coincidences: naive === null || deg === null ? null : naive - deg,
     });
   }
-  return { env, steps };
+  return { env, steps, focus: prog.focus || [], answers: prog.answers || Object.create(null) };
 }
 
 export const degrees = (src) => run(parse(src), polyRing(), polyRing().t);

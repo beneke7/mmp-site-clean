@@ -175,10 +175,13 @@ def upgrade_figure(fig, name, kind, payload):
         box.append(script)
         box.append(lxml.html.fromstring(
             '<div class="mmp-controls">'
+            '<div class="mmp-mode" role="group" aria-label="Applet mode">'
+            '<button data-mode="student" class="is-active" type="button">Student</button>'
+            '<button data-mode="author" type="button">Author</button></div>'
             '<input class="mmp-slider" type="range" min="-1" max="1" step="0.002"'
             ' value="0.25" aria-label="Move the animated point">'
-            '<button data-act="check">Check</button>'
-            '<button data-act="reveal">Show degrees</button></div>'))
+            '<button data-act="check" data-student-only>Check</button>'
+            '<button data-act="reveal" data-student-only>Show answers</button></div>'))
         box.append(E.OL(E.CLASS("mmp-steps")))
         box.append(E.DIV(E.CLASS("mmp-error")))
     else:
@@ -201,6 +204,19 @@ def rewrite(page, labels, applets, book_id, page_files):
         el.set("class", f"thm thm-{kind}")
     for el in sec.xpath("//*[contains(@class,'ltx_proof')]"):
         el.set("class", "proof")
+        paragraphs = el.xpath(".//p[contains(@class,'ltx_p')]")
+        if paragraphs:
+            paragraph = paragraphs[-1]
+            markup = lxml.html.tostring(paragraph, encoding="unicode")
+            updated = re.sub(
+                r"∎(\s*)</p>$",
+                r'<span class="qed" role="img" aria-label="End of proof"></span>\1</p>',
+                markup,
+            )
+            if updated != markup:
+                paragraph.getparent().replace(
+                    paragraph, lxml.html.fragment_fromstring(updated)
+                )
 
     # graphics live beside the fragments; serve them from one flat directory
     for g in sec.xpath("//img | //object"):

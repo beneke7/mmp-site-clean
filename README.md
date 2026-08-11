@@ -105,8 +105,15 @@ AB = polar F           # side AB is the polar of F
 BC = polar D
 B  = meet AB BC
 BE = join B E
+focus D BC B AD BE CF
 claim concurrent AD BE CF
 ```
+
+`focus` selects the proof-relevant objects shown to students. In author mode the
+engine's degree appears beside every construction step and its answer can be
+overwritten for the worksheet; `answer NAME DEGREE` stores such an override in
+the construction source. Without `focus`, every object remains visible for
+backwards compatibility.
 
 Current steps: `free x y`, `circle s`, `on P Q s`, `join`, `meet`, `polar`,
 `midpoint`, `dir`, `perpdir`, `perpline P l`, `perpbis A B`,

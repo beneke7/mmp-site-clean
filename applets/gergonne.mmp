@@ -10,4 +10,5 @@ C  = meet AC BC
 AD = join A D
 BE = join B E
 CF = join C F
+focus D BC B C AD BE CF
 claim concurrent AD BE CF

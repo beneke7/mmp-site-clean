@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ page.title }} · The Method of Moving Points</title>
 <script>try{const t=localStorage.getItem("mmp-theme");if(t)document.documentElement.dataset.theme=t}catch{}</script>
+<script>try{const s=localStorage.getItem("mmp-sidebar");if(s==="open"||s==="closed")document.documentElement.dataset.sidebar=s}catch{}</script>
 <link rel="stylesheet" href="{{ base }}/style.css">
 {%- if math_renderer == 'katex' %}
 <link rel="stylesheet" href="{{ base }}/katex/katex.min.css">
@@ -13,8 +14,13 @@
 <body data-book="{{ book.id }}">
 
 <nav class="sidebar">
-  <h1><a href="{{ base }}/">The Method of Moving Points</a></h1>
-  <p class="sub">Molnár-Szabó Vilmos</p>
+  <div class="sidebar-head">
+    <div>
+      <h1><a href="{{ base }}/">The Method of Moving Points</a></h1>
+      <p class="sub">Molnár-Szabó Vilmos</p>
+    </div>
+    <button class="sidebar-close" type="button" data-sidebar-action="close" aria-label="Hide navigation">×</button>
+  </div>
   <div class="booktabs">
     {%- for b in books %}
     <a href="{{ base }}/{{ b.id }}/{{ b.first }}/"{% if b.id == book.id %} aria-current="page"{% endif %}>{{ b.short }}</a>
@@ -39,6 +45,8 @@
     </ol>
   </details>
 </nav>
+<button class="sidebar-reopen" type="button" data-sidebar-action="open" aria-label="Open navigation">☰ <span>Chapters</span></button>
+<button class="sidebar-scrim" type="button" data-sidebar-action="close" aria-label="Close navigation"></button>
 
 <div class="content">
   <main>{{ page.html }}</main>
@@ -67,8 +75,29 @@
   const syncTheme = () => { const dark = darkNow(); themeButton.textContent = dark ? "Light mode" : "Dark mode"; themeButton.setAttribute("aria-pressed", dark); };
   const applyTheme = () => { const theme = readTheme(); if (theme === "light" || theme === "dark") root.dataset.theme = theme; else delete root.dataset.theme; syncTheme(); };
   themeButton.addEventListener("click", () => { root.dataset.theme = darkNow() ? "light" : "dark"; try { localStorage.setItem("mmp-theme", root.dataset.theme); } catch {} syncTheme(); });
+  const sidebar = document.querySelector(".sidebar");
+  const sidebarButtons = document.querySelectorAll("[data-sidebar-action]");
+  const isMobile = () => matchMedia("(max-width: 62rem)").matches;
+  const readSidebar = () => { try { return localStorage.getItem("mmp-sidebar"); } catch { return null; } };
+  const syncSidebar = () => {
+    const saved = readSidebar();
+    const open = saved === "open" || (saved !== "closed" && !isMobile());
+    root.dataset.sidebar = open ? "open" : "closed";
+    sidebar.setAttribute("aria-hidden", String(!open));
+    sidebarButtons.forEach((button) => button.setAttribute("aria-expanded", String(open)));
+  };
+  sidebarButtons.forEach((button) => button.addEventListener("click", () => {
+    const open = button.dataset.sidebarAction === "open";
+    root.dataset.sidebar = open ? "open" : "closed";
+    try { localStorage.setItem("mmp-sidebar", root.dataset.sidebar); } catch {}
+    syncSidebar();
+    (open ? document.querySelector(".sidebar-close") : document.querySelector(".sidebar-reopen"))?.focus();
+  }));
   window.addEventListener("pageshow", applyTheme);
+  window.addEventListener("pageshow", syncSidebar);
+  window.addEventListener("resize", () => { if (!readSidebar()) syncSidebar(); });
   applyTheme();
+  syncSidebar();
 </script>
 </body>
 </html>

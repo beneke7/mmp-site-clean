@@ -29,6 +29,7 @@ C  = meet AC BC
 AD = join A D
 BE = join B E
 CF = join C F
+focus D BC B C AD BE CF
 claim concurrent AD BE CF
 `;
 
@@ -48,6 +49,8 @@ const gc = g.steps.find((s) => s.claim);
 check('statement degree', gc.statementDegree, 4);
 check('special cases needed', gc.casesNeeded, 5);
 check('statement holds', gc.alwaysTrue, true);
+check('focus metadata', g.focus.includes('D'), true);
+check('answer override metadata', degrees(`${gergonne}\nanswer B 9`).answers.B, 9);
 
 // ------------------------------------------------------------------- Euler
 // §9.3: A, B and line BC fixed, C moves on BC with degree 1. Show H, G, O

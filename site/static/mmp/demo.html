@@ -43,13 +43,18 @@ C  = meet AC BC
 AD = join A D
 BE = join B E
 CF = join C F
+focus D BC B C AD BE CF
 claim concurrent AD BE CF
   </script>
   <div class="mmp-controls">
+    <div class="mmp-mode" role="group" aria-label="Applet mode">
+      <button data-mode="student" class="is-active" type="button">Student</button>
+      <button data-mode="author" type="button">Author</button>
+    </div>
     <input class="mmp-slider" type="range" min="-1" max="1" step="0.002" value="0.25"
            aria-label="Move the animated point">
-    <button data-act="check">Check</button>
-    <button data-act="reveal">Show degrees</button>
+    <button data-act="check" data-student-only>Check</button>
+    <button data-act="reveal" data-student-only>Show answers</button>
   </div>
   <ol class="mmp-steps"></ol>
   <div class="mmp-error"></div>
@@ -79,13 +84,18 @@ Mab = midpoint A B
 m1  = join A Mbc
 m2  = join C Mab
 G   = meet m1 m2       # centroid
+focus C H G O
 claim collinear H G O
   </script>
   <div class="mmp-controls">
+    <div class="mmp-mode" role="group" aria-label="Applet mode">
+      <button data-mode="student" class="is-active" type="button">Student</button>
+      <button data-mode="author" type="button">Author</button>
+    </div>
     <input class="mmp-slider" type="range" min="-1" max="1" step="0.002" value="0.2"
            aria-label="Move the animated point">
-    <button data-act="check">Check</button>
-    <button data-act="reveal">Show degrees</button>
+    <button data-act="check" data-student-only>Check</button>
+    <button data-act="reveal" data-student-only>Show answers</button>
   </div>
   <ol class="mmp-steps"></ol>
   <div class="mmp-error"></div>

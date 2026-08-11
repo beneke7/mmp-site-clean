@@ -78,32 +78,66 @@ export function initApplets(root = document) {
     const svg = el('svg', { viewBox: `${VIEW.x0} ${-VIEW.y0 - VIEW.h} ${VIEW.w} ${VIEW.h}`, class: 'mmp-canvas' });
     box.querySelector('.mmp-figure').replaceChildren(svg);
 
-    // worksheet
+    const focus = new Set(computed.focus?.length
+      ? computed.focus
+      : computed.steps.filter((s) => s.name).map((s) => s.name));
+    const answers = { ...(computed.answers || {}) };
+    let mode = 'student';
     const list = box.querySelector('.mmp-steps');
     const inputs = new Map();
-    for (const s of computed.steps) {
-      const li = document.createElement('li');
-      if (s.claim) {
-        li.className = 'mmp-claim';
-        li.innerHTML = `<b>${s.op}</b> ${s.args.join(', ')} — statement degree
-          <span class="mmp-answer">${s.statementDegree}</span>,
-          so <b>${s.casesNeeded}</b> special cases suffice.`;
-      } else {
-        const inp = document.createElement('input');
-        Object.assign(inp, { type: 'text', inputMode: 'numeric', size: 2, className: 'mmp-input' });
-        inp.setAttribute('aria-label', `degree of ${s.name}`);
-        inputs.set(inp, s);
+    const answerFor = (s) => answers[s.name] ?? s.degree;
+
+    function renderWorksheet() {
+      list.replaceChildren();
+      inputs.clear();
+      for (const s of computed.steps) {
+        if (!s.claim && mode === 'student' && !focus.has(s.name)) continue;
+        const li = document.createElement('li');
+        if (s.claim) {
+          li.className = 'mmp-claim';
+          const claim = document.createElement('b');
+          claim.textContent = `${s.op} ${s.args.join(', ')}`;
+          li.append(claim, document.createTextNode(' — statement degree '));
+          li.append(Object.assign(document.createElement('span'), { className: 'mmp-answer', textContent: s.statementDegree }));
+          li.append(document.createTextNode(`, so ${s.casesNeeded} special cases suffice.`));
+          list.append(li);
+          continue;
+        }
+
+        li.className = `mmp-step${focus.has(s.name) ? ' mmp-focus' : ''}`;
         li.append(Object.assign(document.createElement('code'), { textContent: s.name }),
           document.createTextNode(' — ' + stepText(s) + ' '));
-        li.append('(', inp, ')');
+        if (mode === 'author') {
+          const engine = document.createElement('span');
+          engine.className = 'mmp-engine';
+          engine.textContent = `engine ${s.degree ?? '—'}`;
+          const label = document.createElement('span');
+          label.className = 'mmp-answer-label';
+          label.textContent = 'answer';
+          const inp = document.createElement('input');
+          Object.assign(inp, { type: 'text', inputMode: 'numeric', size: 2, className: 'mmp-input mmp-author-input' });
+          inp.value = answerFor(s) ?? '';
+          inp.setAttribute('aria-label', `author answer for degree of ${s.name}`);
+          inp.addEventListener('input', () => {
+            if (!inp.value.trim()) delete answers[s.name];
+            else answers[s.name] = inp.value.trim();
+          });
+          li.append(engine, label, inp);
+        } else {
+          const inp = document.createElement('input');
+          Object.assign(inp, { type: 'text', inputMode: 'numeric', size: 2, className: 'mmp-input' });
+          inp.setAttribute('aria-label', `degree of ${s.name}`);
+          inputs.set(inp, s);
+          li.append('(', inp, ')');
+        }
         if (s.coincidences) {
           const why = document.createElement('span');
           why.className = 'mmp-why';
           why.textContent = `${s.naiveDegree} − ${s.coincidences}`;
           li.append(' ', why);
         }
+        list.append(li);
       }
-      list.append(li);
     }
 
     // animation
@@ -113,18 +147,35 @@ export function initApplets(root = document) {
     slider.addEventListener('input', draw);
     draw();
 
-    box.querySelector('[data-act="check"]').addEventListener('click', () => {
+    const setMode = (next) => {
+      mode = next;
+      box.querySelectorAll('[data-mode]').forEach((button) => {
+        button.classList.toggle('is-active', button.dataset.mode === mode);
+      });
+      box.querySelectorAll('[data-student-only]').forEach((element) => {
+        element.hidden = mode !== 'student';
+      });
+      box.classList.toggle('mmp-author', mode === 'author');
+      renderWorksheet();
+    };
+
+    box.querySelectorAll('[data-mode]').forEach((button) => {
+      button.addEventListener('click', () => setMode(button.dataset.mode));
+    });
+    box.querySelector('[data-act="check"]')?.addEventListener('click', () => {
       for (const [inp, s] of inputs) {
-        const given = inp.value.trim();
-        inp.classList.toggle('is-right', given !== '' && Number(given) === s.degree);
-        inp.classList.toggle('is-wrong', given !== '' && Number(given) !== s.degree);
+        const given = inp.value.trim(), expected = answerFor(s);
+        const right = given !== '' && expected != null && Number(given) === Number(expected);
+        inp.classList.toggle('is-right', right);
+        inp.classList.toggle('is-wrong', given !== '' && !right);
       }
       box.classList.add('show-why');
     });
-    box.querySelector('[data-act="reveal"]').addEventListener('click', () => {
-      for (const [inp, s] of inputs) { inp.value = s.degree; inp.classList.add('is-right'); }
+    box.querySelector('[data-act="reveal"]')?.addEventListener('click', () => {
+      for (const [inp, s] of inputs) { inp.value = answerFor(s) ?? ''; inp.classList.add('is-right'); }
       box.classList.add('show-why');
     });
+    setMode('student');
   }
 }
 
