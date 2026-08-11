@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page.title }} · The Method of Moving Points</title>
+<script>try{const t=localStorage.getItem("mmp-theme");if(t)document.documentElement.dataset.theme=t}catch{}</script>
+<link rel="stylesheet" href="{{ base }}/style.css">
+{%- if math_renderer == 'katex' %}
+<link rel="stylesheet" href="{{ base }}/katex/katex.min.css">
+{%- endif %}
+</head>
+<body data-book="{{ book.id }}">
+
+<nav class="sidebar">
+  <h1><a href="{{ base }}/">The Method of Moving Points</a></h1>
+  <p class="sub">Molnár-Szabó Vilmos</p>
+  <div class="booktabs">
+    {%- for b in books %}
+    <a href="{{ base }}/{{ b.id }}/{{ b.first }}/"{% if b.id == book.id %} aria-current="page"{% endif %}>{{ b.short }}</a>
+    {%- endfor %}
+  </div>
+  <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Dark mode</button>
+  <details class="toc" open>
+    <summary>Chapters <span>{{ book.sections|length }}</span></summary>
+    <ol>
+      {%- for s in book.sections %}
+      <li class="chapter{% if s.slug == page.slug %} is-current{% endif %}">
+        <a href="{{ base }}/{{ book.id }}/{{ s.slug }}/"{% if s.slug == page.slug %} aria-current="page"{% endif %}><span class="num">{{ s.number }}</span>{{ s.title }}</a>
+        {%- if s.subsections %}
+        <ol class="subsections">
+          {%- for sub in s.subsections %}
+          <li><a href="{{ base }}/{{ book.id }}/{{ s.slug }}/#{{ sub.id }}"><span class="num">{{ sub.number }}</span>{{ sub.title }}</a></li>
+          {%- endfor %}
+        </ol>
+        {%- endif %}
+      </li>
+      {%- endfor %}
+    </ol>
+  </details>
+</nav>
+
+<div class="content">
+  <main>{{ page.html }}</main>
+  <nav class="pager">
+    {%- if page.prev %}<a rel="prev" href="{{ base }}/{{ book.id }}/{{ page.prev.slug }}/">← {{ page.prev.title }}</a>{% endif %}
+    {%- if page.next %}<a rel="next" href="{{ base }}/{{ book.id }}/{{ page.next.slug }}/">{{ page.next.title }} →</a>{% endif %}
+  </nav>
+</div>
+
+<aside id="pane" aria-label="Reference">
+  <div class="pane-bar"><a class="pane-title" href="#"></a><button data-act="close-pane">Close</button></div>
+  <div class="pane-body"></div>
+</aside>
+
+<script type="module">
+  import { initApplets } from "{{ base }}/mmp/applet.js";
+  window.MMP = { initApplets };
+</script>
+<script type="module" src="{{ base }}/split.js"></script>
+<script>
+  if (matchMedia("(max-width: 62rem)").matches) document.querySelector(".toc").removeAttribute("open");
+  const themeButton = document.querySelector("[data-theme-toggle]");
+  const root = document.documentElement;
+  const readTheme = () => { try { return localStorage.getItem("mmp-theme"); } catch { return null; } };
+  const darkNow = () => root.dataset.theme === "dark" || (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+  const syncTheme = () => { const dark = darkNow(); themeButton.textContent = dark ? "Light mode" : "Dark mode"; themeButton.setAttribute("aria-pressed", dark); };
+  const applyTheme = () => { const theme = readTheme(); if (theme === "light" || theme === "dark") root.dataset.theme = theme; else delete root.dataset.theme; syncTheme(); };
+  themeButton.addEventListener("click", () => { root.dataset.theme = darkNow() ? "light" : "dark"; try { localStorage.setItem("mmp-theme", root.dataset.theme); } catch {} syncTheme(); });
+  window.addEventListener("pageshow", applyTheme);
+  applyTheme();
+</script>
+</body>
+</html>

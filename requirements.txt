@@ -1,0 +1,13 @@
+# The entire Python dependency surface of this project.
+#
+#   jinja2   renders site/templates/page.html
+#   lxml     parses and rewrites the HTML that latexmlpost produces
+#
+# Everything else build.py uses is in the standard library.
+#
+# Lower bounds, not exact pins: these are two very stable libraries and the
+# script uses only long-settled API. If you ever need a byte-identical rebuild
+# years from now, run `pip freeze > requirements.lock` after a good build and
+# install from that instead.
+Jinja2>=3.1
+lxml>=5.0

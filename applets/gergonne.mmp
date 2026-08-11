@@ -1,0 +1,13 @@
+E  = circle 3          # tangency point on CA, fixed
+F  = circle -2         # tangency point on AB, fixed
+D  = circle $t         # the animated point, degree 2 on the incircle
+AB = polar F           # side AB is the polar of F
+AC = polar E           # side AC is the polar of E
+BC = polar D           # side BC is the polar of D
+A  = meet AB AC
+B  = meet AB BC
+C  = meet AC BC
+AD = join A D
+BE = join B E
+CF = join C F
+claim concurrent AD BE CF

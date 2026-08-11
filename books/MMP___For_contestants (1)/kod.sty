@@ -1,0 +1,409 @@
+\usepackage[utf8]{inputenc}
+%\usepackage[magyar]{babel}
+\usepackage{t1enc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{amscd}
+\usepackage{epic, eepic}
+\usepackage{url}
+\usepackage{color}
+\usepackage[many]{tcolorbox}
+\usepackage{hyperref}
+\usepackage{todonotes}
+\usepackage{comment}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{geometry}
+ \geometry{
+ %left=10mm,
+ %right=10mm,
+ footskip=25mm
+ }
+\textwidth 16cm
+\textheight 23 cm
+\topmargin -1cm
+\oddsidemargin 0cm
+\evensidemargin 0cm
+\parskip 2mm
+\setlength{\parindent}{0pt}
+
+\makeatletter
+
+\def\renewtheorem#1{%
+	\expandafter\let\csname#1\endcsname\relax
+	\expandafter\let\csname c@#1\endcsname\relax
+	\gdef\renewtheorem@envname{#1}
+	\renewtheorem@secpar
+}
+\def\renewtheorem@secpar{\@ifnextchar[{\renewtheorem@numberedlike}{\renewtheorem@nonumberedlike}}
+\def\renewtheorem@numberedlike[#1]#2{\newtheorem{\renewtheorem@envname}[#1]{#2}}
+\def\renewtheorem@nonumberedlike#1{
+	\def\renewtheorem@caption{#1}
+	\edef\renewtheorem@nowithin{\noexpand\newtheorem{\renewtheorem@envname}{\renewtheorem@caption}}
+	\renewtheorem@thirdpar
+}
+\def\renewtheorem@thirdpar{\@ifnextchar[{\renewtheorem@within}{\renewtheorem@nowithin}}
+\def\renewtheorem@within[#1]{\renewtheorem@nowithin[#1]}
+
+\makeatother
+
+% Color definitions
+\definecolor{proofcolor}{RGB}{0,0,0}
+
+\definecolor{theorembordercolor}{RGB}{237, 40, 57}
+\definecolor{theorembackgroundcolor}{RGB}{255, 228, 227}
+
+\definecolor{lemmabordercolor}{RGB}{0, 110, 184}
+\definecolor{lemmabackgroundcolor}{RGB}{230, 234, 250}
+
+\definecolor{definitionbordercolor}{RGB}{60, 60, 60}
+\definecolor{definitionbackgroundcolor}{RGB}{230, 230, 230}
+
+\definecolor{exercisebordercolor}{RGB}{128, 0, 128}
+\definecolor{exercisebackgroundcolor}{RGB}{246, 234, 252}
+
+\definecolor{examplebordercolor}{RGB}{90, 90, 90}
+\definecolor{examplebackgroundcolor}{RGB}{255, 255, 255}
+
+\definecolor{hintbordercolor}{RGB}{0, 0, 0}
+\definecolor{hintbackgroundcolor}{RGB}{230, 229, 245}
+
+\definecolor{practicebordercolor}{RGB}{0, 0, 0}
+\definecolor{practicebackgroundcolor}{RGB}{255, 255, 255}
+
+\newcommand{\hintszoveg}{Segítség}
+
+\newtheoremstyle{theorem}
+{0pt}{0pt}{\normalfont}{0pt}
+{}{\;}{0.25em}
+{{\sffamily\normalfont\color{theorembordercolor}{\bf \thmnumber{\textup{#2}}.~\thmname{#1}.}}
+	\thmnote{\normalfont\color{black}~(#3)}}
+
+\newtheoremstyle{definition}
+{0pt}{0pt}{\normalfont}{0pt}
+{}{\;}{0.25em}
+{{\sffamily\normalfont\color{definitionbordercolor}{\bf \thmnumber{\textup{#2}}.~\thmname{#1}.}}
+	\thmnote{\normalfont\color{black}~(#3)}}
+
+\newtheoremstyle{lemma}
+{0pt}{0pt}{\normalfont}{0pt}
+{}{\;}{0.25em}
+{{\sffamily\normalfont\color{lemmabordercolor}{\bf \thmnumber{\textup{#2}}.~\thmname{#1}.}}
+	\thmnote{\normalfont\color{black}~(#3)}}
+
+\newtheoremstyle{exercise}
+{0pt}{0pt}{\normalfont}{0pt}
+{}{\;}{0.25em}
+{{\sffamily\normalfont\color{exercisebordercolor}{\bf \thmnumber{\textup{#2}}.~\thmname{#1}.}}
+\thmnote{\normalfont\color{black}~(#3)}}
+
+\newtheoremstyle{example}
+{0pt}{0pt}{\normalfont}{0pt}
+{}{\;}{0.25em}
+{{\sffamily\normalfont\color{examplebordercolor}{\bf \thmnumber{\textup{#2}}.~\thmname{#1}.}}
+\thmnote{\normalfont\color{black}~(#3)}}
+
+\newtheoremstyle{hint}
+{0pt}{0pt}{\normalfont}{0pt}
+{}{\;}{0.25em}
+{{\sffamily\normalfont\color{hintbordercolor}{\bf \thmname{#1}.}}
+\thmnote{\normalfont\color{black}~(#3)}}
+
+\newtheoremstyle{practice}
+{0pt}{0pt}{\normalfont}{0pt}
+{}{\;}{0.25em}
+{{\sffamily\normalfont\color{practicebordercolor}{\bf \thmnumber{\textup{#2}}.~\thmname{#1}.}}
+\thmnote{\normalfont\color{black}~(#3)}}
+
+\theoremstyle{theorem}
+
+\newtheorem{theorem}{Theorem}[section]
+
+
+\tcolorboxenvironment{theorem}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=theorembackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{theorembordercolor}, arc=.5mm
+}
+
+
+
+
+\theoremstyle{lemma}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Állítás}
+\newtheorem{corollary}[theorem]{Corollary}
+\tcolorboxenvironment{lemma}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=lemmabackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{lemmabordercolor}, arc=.5mm
+}
+\tcolorboxenvironment{proposition}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=lemmabackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{lemmabordercolor}, arc=.5mm
+}
+\tcolorboxenvironment{corollary}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=lemmabackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{lemmabordercolor}, arc=.5mm
+}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{notation}[theorem]{Jelölés}
+
+\tcolorboxenvironment{definition}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=definitionbackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{definitionbordercolor}, arc=.5mm
+}
+\tcolorboxenvironment{notation}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=definitionbackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{definitionbordercolor}, arc=.5mm
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% Example Environments %
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\theoremstyle{example}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{corollary2}[theorem]{Következmény}
+\newtheorem{question}[theorem]{Kérdés}
+\newtheorem{tip}[theorem]{Tipp}
+
+\tcolorboxenvironment{example}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=examplebackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{examplebordercolor}, arc=.5mm
+}
+\tcolorboxenvironment{remark}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=examplebackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{examplebordercolor}, arc=.5mm
+}
+\tcolorboxenvironment{corollary2}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=examplebackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{examplebordercolor}, arc=.5mm
+}
+\tcolorboxenvironment{question}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=examplebackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{examplebordercolor}, arc=.5mm
+}
+\tcolorboxenvironment{tip}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=examplebackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{examplebordercolor}, arc=.5mm
+}
+\theoremstyle{exercise}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{problem}[theorem]{Probléma}
+
+\tcolorboxenvironment{exercise}{
+		enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=exercisebackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{exercisebordercolor}, arc=.5mm
+}
+\tcolorboxenvironment{conjecture}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=exercisebackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{exercisebordercolor}, arc=.5mm
+}
+\tcolorboxenvironment{problem}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=exercisebackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{exercisebordercolor}, arc=.5mm
+}
+
+\theoremstyle{hint}
+\newtheorem*{hint}{Segítség}
+\newtheorem*{hint2}{\hintszoveg}
+
+\tcolorboxenvironment{hint}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=white, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{gray}, arc=.5mm
+}
+\tcolorboxenvironment{hint2}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=white, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{gray}, arc=.5mm
+}
+
+\theoremstyle{practice}
+
+\newtheorem{practice}{Gyakorlófeladat}
+
+\tcolorboxenvironment{practice}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=practicebackgroundcolor, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{practicebordercolor}, arc=.5mm
+}
+
+\AddToHook{env/theorem/after}{\colorlet{proofcolor}{theorembordercolor}}
+\AddToHook{env/proposition/after}{\colorlet{proofcolor}{lemmabordercolor}}
+\AddToHook{env/corollary2/after}{\colorlet{proofcolor}{examplebordercolor}}
+\AddToHook{env/lemma/after}{\colorlet{proofcolor}{lemmabordercolor}}
+\AddToHook{env/corollary/after}{\colorlet{proofcolor}{lemmabordercolor}}
+\AddToHook{env/definition/after}{\colorlet{proofcolor}{definitionbordercolor}}
+
+\AddToHook{env/example/after}{\colorlet{proofcolor}{examplebordercolor}}
+\AddToHook{env/remark/after}{\colorlet{proofcolor}{examplebordercolor}}
+
+\AddToHook{env/exercise/after}{\colorlet{proofcolor}{exercisebordercolor}}
+\AddToHook{env/conjecture/after}{\colorlet{proofcolor}{exercisebordercolor}}
+\AddToHook{env/problem/after}{\colorlet{proofcolor}{exercisebordercolor}}
+\AddToHook{env/hint/after}{\colorlet{proofcolor}{hintbordercolor}}
+\AddToHook{env/hint2/after}{\colorlet{proofcolor}{hintbordercolor}}
+\AddToHook{env/practice/after}{\colorlet{proofcolor}{practicebordercolor}}
+
+% \let\qedsymbolMyOriginal\qedsymbol
+% \renewcommand{\qedsymbol}{
+% 	\color{proofcolor}\qedsymbolMyOriginal
+%}
+
+% \newtheoremstyle{proof}
+% {0pt}{0pt}{\normalfont}{0pt}
+% {}{\;}{0.25em}
+% {{\sffamily\normalfont{\bf \color{proofcolor}\thmname{#1}.}}
+% 	\thmnote{\normalfont\color{black}~(\textit{#3})}}
+
+% \theoremstyle{proof}
+% \renewtheorem{proof}{Bizonyítás}
+% \renewtheorem{proof1}{Első bizonyítás}
+% \renewtheorem{proof2}{Második bizonyítás}
+% \renewtheorem{proofv}{Bizonyításvázlat}
+% \renewtheorem{solution}{Megoldás}
+% \renewtheorem{solution1}{Első megoldás}
+% \renewtheorem{solution2}{Második megoldás}
+% \renewtheorem{solutionv}{Megoldásvázlat}
+
+
+% \tcolorboxenvironment{proof}{
+% 	enhanced jigsaw, pad at break*=1mm, breakable,
+% 	left=4mm, right=4mm, top=1mm, bottom=1mm,
+% 	colback=white, boxrule=0pt, frame hidden,
+% 	borderline west={0.5mm}{0mm}{proofcolor}, arc=.5mm
+% }
+\tcolorboxenvironment{proofv}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=white, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{proofcolor}, arc=.5mm
+}
+\tcolorboxenvironment{solution}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=white, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{proofcolor}, arc=.5mm
+}
+\tcolorboxenvironment{solutionv}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=white, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{proofcolor}, arc=.5mm
+}
+\tcolorboxenvironment{proof1}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=white, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{proofcolor}, arc=.5mm
+}
+\tcolorboxenvironment{proof2}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=white, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{proofcolor}, arc=.5mm
+}
+\tcolorboxenvironment{solution1}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=white, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{proofcolor}, arc=.5mm
+}
+\tcolorboxenvironment{solution2}{
+	enhanced jigsaw, pad at break*=1mm, breakable,
+	left=4mm, right=4mm, top=1mm, bottom=1mm,
+	colback=white, boxrule=0pt, frame hidden,
+	borderline west={0.5mm}{0mm}{proofcolor}, arc=.5mm
+}
+
+\renewcommand{\abstractname}{Az anyag leírása}
+%\renewcommand{\proofname}{Bizonyítás}
+
+\newenvironment{hintto}[1]
+{\renewcommand{\hintszoveg}{\it Segítség \textbf{\aref{#1}}. gyakorlófeladathoz}\begin{hint2}}
+	{\end{hint2}}
+
+
+\newcommand{\PG}{\mathrm{PG}}
+\newcommand{\AG}{\mathrm{AG}}
+\newcommand{\cc}{\mathbb{C}}
+\newcommand{\rr}{\mathbb{R}}
+\newcommand{\qq}{\mathbb{Q}}
+\newcommand{\zz}{\mathbb{Z}}
+\newcommand{\nn}{\mathbb{N}}
+\newcommand{\ff}{\mathbb{F}}
+\newcommand{\pp}{\mathbb{P}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\stara}{\marginpar{\faStar}}
+\newcommand{\starb}{\marginpar{\faStarHalfO}}
+\newcommand{\starc}{\marginpar{\faStarO}}
+
+\newcommand\restr[2]{{% we make the whole thing an ordinary symbol
+  \left.\kern-\nulldelimiterspace % automatically resize the bar with \right
+  #1 % the function
+  \vphantom{\big|} % pretend it's a little taller at normal size
+  \right|_{#2} % this is the delimiter
+  }}
+
+\def\shortyear#1{\expandafter\shortyearhelper#1}
+\def\shortyearhelper#1#2#3#4{#3#4}
+
+\def\mydate{\leavevmode\hbox{\shortyear{\the\year}.\twodigits\month.\twodigits\day.}}
+\def\twodigits#1{\ifnum#1<10 0\fi\the#1}
+
+\usepackage{fontawesome}
+\usepackage{dashrule}
+
+\def\dotfill#1{\cleaders\hbox to #1{.}\hfill}
+\makeatletter
+\def\myrulefill{\leavevmode\leaders\hrule height .7ex width 1ex depth -0.6ex\hfill\kern\z@}
+\makeatother
+
+\usepackage{todonotes}
+
+% \usepackage[
+% backend=biber,
+% style=numeric,
+% sorting=ynt
+% ]{biblatex}
+
+%\addbibresource{forrasok.bib}
+

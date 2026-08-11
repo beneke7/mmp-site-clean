@@ -1,0 +1,15 @@
+\section{Degree of constructions}\label{sec:degree-of-constructions}
+
+\begin{thm}[Zack's lemma, with proof]\label{thm:zack-join-rigorous}
+  Let $A$ and $B$ be polynomial families of points that are not identically
+  equal. Then the join $AB$ is a polynomial family of lines and
+  \[ \deg(AB) = \deg A + \deg B - \sum_{t \in \mathbb{P}^1} \operatorname{mult}_t(A = B). \]
+\end{thm}
+
+\begin{proof}
+  The coordinates of $AB$ are the $2 \times 2$ minors of the matrix with rows
+  $A$ and $B$, hence forms of degree $\deg A + \deg B$. Their common zeros are
+  exactly the parameters at which $A$ and $B$ are proportional, with the same
+  multiplicity; dividing by the greatest common divisor gives the claim, and
+  cancellation of leading coefficients accounts for coincidences at $t=\infty$.
+\end{proof}

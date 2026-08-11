@@ -1,0 +1,60 @@
+% mmp.sty — shared preamble for both books.
+% Kept deliberately small: every macro here has to be understood by both
+% pdflatex (for the PDF) and LaTeXML (for the website).
+\ProvidesPackage{mmp}[2026/08/10 Method of Moving Points]
+\RequirePackage{amsmath,amssymb,amsthm,graphicx,hyperref}
+
+% One shared counter, numbered by section — this is what produces "4.2. Theorem".
+\theoremstyle{definition}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{defn}[thm]{Definition}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{exa}[thm]{Example}
+\newtheorem{ex}[thm]{Exercise}
+
+% The full contestant manuscript uses the conventional environment names;
+% keep the shorter names above for the compact sample book.
+\newtheorem{theorem}[thm]{Theorem}
+\newtheorem{lemma}[thm]{Lemma}
+\newtheorem{definition}[thm]{Definition}
+\newtheorem{remark}[thm]{Remark}
+\newtheorem{example}[thm]{Example}
+\newtheorem{exercise}[thm]{Exercise}
+\newtheorem{corollary}[thm]{Corollary}
+
+\newcommand{\cc}{\mathbb{C}}
+\newcommand{\rr}{\mathbb{R}}
+\newcommand{\qq}{\mathbb{Q}}
+\newcommand{\zz}{\mathbb{Z}}
+\newcommand{\nn}{\mathbb{N}}
+\newcommand{\ff}{\mathbb{F}}
+\newcommand{\pp}{\mathbb{P}}
+
+% Cross-book reference. The same source line works in both outputs:
+%   \rref{thm:zack}  ->  PDF: number resolved through xr
+%                        HTML: href="rref:thm:zack", which build.py turns into
+%                              a split-pane link with the right number as text.
+% Define the conditional if nobody else has (pdflatex: false; LaTeXML gets it
+% preloaded as true). \@ifundefined rather than \ifx, because a bare
+% \iflatexml token sitting inside a skipped conditional branch would be
+% counted as a nested \if and eat the matching \fi.
+\@ifundefined{iflatexml}{\newif\iflatexml}{}
+\iflatexml
+  % The link text is a placeholder; build.py replaces it with the resolved
+  % number once both books have been scanned.
+  \newcommand{\rref}[1]{\href{rref:#1}{see}}
+\else
+  \RequirePackage{xr-hyper}
+  \newcommand{\rref}[1]{\ref{R-#1}}
+\fi
+
+% A figure. The name is both the image basename and the figure's label, and
+% that label is what the website matches against applets/<name>.mmp: if such a
+% construction exists the figure becomes interactive, with the image kept as
+% the fallback. Nothing here has to change either way.
+\newcommand{\mmpfig}[2]{%
+  \begin{figure}[htbp]\centering
+    \includegraphics[width=.8\linewidth]{figs/#1}%
+    \caption{#2}\label{fig:#1}%
+  \end{figure}}

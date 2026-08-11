@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-3.4 -2.6 6.8 5.2" width="680" height="520">
+<style>.c{fill:none;stroke:#8a9099;stroke-width:.012}.l{stroke:#1f5d8c;stroke-width:.012}.p{fill:#1b1d21}.f{fill:#9a4a12}.t{font:.16px sans-serif;fill:#5f6672}</style>
+<circle class="c" cx="0" cy="0" r="1"/>
+<circle class="p" cx="-0.8000" cy="-0.6000" r="0.055"/>
+<text class="t" x="-0.7000" y="-0.7000">E</text>
+<circle class="p" cx="-0.6000" cy="0.8000" r="0.055"/>
+<text class="t" x="-0.5000" y="0.7000">F</text>
+<circle class="f" cx="0.7817" cy="-0.6236" r="0.055"/>
+<text class="t" x="0.8817" y="-0.7236">D</text>
+<line class="l" x1="-3.4000" y1="-1.3000" x2="1.8000" y2="2.6000"/>
+<line class="l" x1="-3.2000" y1="2.6000" x2="0.7000" y2="-2.6000"/>
+<line class="l" x1="3.3533" y1="2.6000" x2="-0.7949" y2="-2.6000"/>
+<circle class="p" cx="-1.4000" cy="0.2000" r="0.055"/>
+<text class="t" x="-1.3000" y="0.1000">A</text>
+<circle class="p" cx="5.6667" cy="5.5000" r="0.055"/>
+<text class="t" x="5.7667" y="5.4000">B</text>
+<circle class="p" cx="-0.0244" cy="-1.6341" r="0.055"/>
+<text class="t" x="0.0756" y="-1.7341">C</text>
+<line class="l" x1="-3.4000" y1="0.9550" x2="3.4000" y2="-1.6120"/>
+<line class="l" x1="2.5923" y1="2.6000" x2="-2.9202" y2="-2.6000"/>
+<line class="l" x1="-1.0257" y1="2.6000" x2="0.2040" y2="-2.6000"/>
+</svg>

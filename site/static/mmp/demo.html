@@ -1,0 +1,98 @@
+<!doctype html>
+<!--
+  demo.html — the applet with no build pipeline behind it.
+
+      cd site/static && python3 -m http.server 8000
+      open http://localhost:8000/mmp/demo.html
+
+  This exercises engine.js, applet.js and style.css in a real browser. If this
+  page works, the interactive part of the site works; everything else is
+  plumbing. Edit the construction below and reload to try your own.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMP applet demo</title>
+<link rel="stylesheet" href="../style.css">
+<style>body { grid-template-columns: 1fr; } .content { max-width: 48rem; margin: 0 auto; }</style>
+</head>
+<body data-book="demo">
+<div class="content">
+<main>
+
+<h2>Applet demo</h2>
+
+<p>The incircle animation from §5.2. Fix <em>A</em>, <em>E</em>, <em>F</em> and
+the incircle; animate <em>D</em> on the incircle with degree 2. Drag the slider,
+fill in the degrees, then check. The expected answers are
+BC 2, B 1, C 1, AD 2, BE 1, CF 1, statement degree 4.</p>
+
+<div class="mmp" data-applet="mmp">
+  <div class="mmp-figure"><p class="mmp-fallback">(static figure goes here)</p></div>
+  <script type="text/mmp">
+E  = circle 3          # tangency point on CA, fixed
+F  = circle -2         # tangency point on AB, fixed
+D  = circle $t         # the animated point, degree 2 on the incircle
+AB = polar F           # side AB is the polar of F
+AC = polar E           # side AC is the polar of E
+BC = polar D           # side BC is the polar of D
+A  = meet AB AC
+B  = meet AB BC
+C  = meet AC BC
+AD = join A D
+BE = join B E
+CF = join C F
+claim concurrent AD BE CF
+  </script>
+  <div class="mmp-controls">
+    <input class="mmp-slider" type="range" min="-1" max="1" step="0.002" value="0.25"
+           aria-label="Move the animated point">
+    <button data-act="check">Check</button>
+    <button data-act="reveal">Show degrees</button>
+  </div>
+  <ol class="mmp-steps"></ol>
+  <div class="mmp-error"></div>
+</div>
+
+<p>The Euler line, §9.3. Here <em>A</em>, <em>B</em> and line <em>BC</em> are
+fixed and <em>C</em> moves along <em>BC</em> with degree 1. Watch
+<em>H</em>, <em>G</em> and <em>O</em> stay in line as you drag.</p>
+
+<div class="mmp" data-applet="mmp">
+  <div class="mmp-figure"><p class="mmp-fallback">(static figure goes here)</p></div>
+  <script type="text/mmp">
+A   = free 1 2
+B   = free -1 0
+Bx  = free 0 0
+C   = on B Bx $t       # degree 1 along line BC
+BC  = join B C
+CA  = join C A
+hA  = perpline A BC    # altitude from A
+hB  = perpline B CA    # altitude from B
+H   = meet hA hB       # orthocenter
+pAB = perpbis A B
+pBC = perpbis B C
+O   = meet pAB pBC     # circumcenter
+Mbc = midpoint B C
+Mab = midpoint A B
+m1  = join A Mbc
+m2  = join C Mab
+G   = meet m1 m2       # centroid
+claim collinear H G O
+  </script>
+  <div class="mmp-controls">
+    <input class="mmp-slider" type="range" min="-1" max="1" step="0.002" value="0.2"
+           aria-label="Move the animated point">
+    <button data-act="check">Check</button>
+    <button data-act="reveal">Show degrees</button>
+  </div>
+  <ol class="mmp-steps"></ol>
+  <div class="mmp-error"></div>
+</div>
+
+</main>
+</div>
+<script type="module" src="./applet.js"></script>
+</body>
+</html>
