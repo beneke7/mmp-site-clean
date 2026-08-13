@@ -25,6 +25,7 @@
     {%- for b in books %}
     <a href="{{ base }}/{{ b.id }}/{{ b.first }}/"{% if b.id == book.id %} aria-current="page"{% endif %}>{{ b.short }}</a>
     {%- endfor %}
+    <a class="editor-tab" href="{{ base }}/editor/">Applet editor</a>
   </div>
   <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Dark mode</button>
   <details class="toc" open>

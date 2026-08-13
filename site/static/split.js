@@ -35,7 +35,11 @@ async function openPane(href) {
 }
 
 function closePane() {
+  const appletSplit = document.body.classList.contains('mmp-split');
   document.body.classList.remove('split');
+  document.body.classList.remove('mmp-split');
+  document.querySelectorAll('.mmp-origin-expanded').forEach((box) => box.classList.remove('mmp-origin-expanded'));
+  if (appletSplit) paneBody?.replaceChildren();
   history.replaceState(null, '', location.pathname + location.hash);
 }
 

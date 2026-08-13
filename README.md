@@ -105,20 +105,14 @@ AB = polar F           # side AB is the polar of F
 BC = polar D
 B  = meet AB BC
 BE = join B E
-focus D BC B AD BE CF
 claim concurrent AD BE CF
 ```
 
-`focus` selects the proof-relevant objects shown to students. In author mode the
-engine's degree appears beside every construction step and its answer can be
-overwritten for the worksheet; `answer NAME DEGREE` stores such an override in
-the construction source. Without `focus`, every object remains visible for
-backwards compatibility.
-
 Current steps: `free x y`, `circle s`, `on P Q s`, `join`, `meet`, `polar`,
-`midpoint`, `dir`, `perpdir`, `perpline P l`, `perpbis A B`,
+`midpoint`, `dir`, `perpdir`, `perpline P l`, `perpbis A B`, `anglebis A B C`,
 `claim collinear|concurrent`. Adding one is a few lines in `engine.js` — the
-only requirement is that it be polynomial in the coordinates.
+only requirement for degree tracking is that it be polynomial in the
+coordinates. `anglebis` is real-coordinate only, so its degree is unavailable.
 
 `make check` runs every construction in `applets/` in CI and fails the build if
 a claim stops holding. The figures on the site are machine-checked mod p.

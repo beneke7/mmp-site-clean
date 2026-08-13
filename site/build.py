@@ -175,13 +175,11 @@ def upgrade_figure(fig, name, kind, payload):
         box.append(script)
         box.append(lxml.html.fromstring(
             '<div class="mmp-controls">'
-            '<div class="mmp-mode" role="group" aria-label="Applet mode">'
-            '<button data-mode="student" class="is-active" type="button">Student</button>'
-            '<button data-mode="author" type="button">Author</button></div>'
             '<input class="mmp-slider" type="range" min="-1" max="1" step="0.002"'
             ' value="0.25" aria-label="Move the animated point">'
-            '<button data-act="check" data-student-only>Check</button>'
-            '<button data-act="reveal" data-student-only>Show answers</button></div>'))
+            '<button data-act="check">Check</button>'
+            '<button data-act="reveal">Show degrees</button>'
+            '<button data-act="expand" aria-expanded="false">Expand</button></div>'))
         box.append(E.OL(E.CLASS("mmp-steps")))
         box.append(E.DIV(E.CLASS("mmp-error")))
     else:
@@ -368,6 +366,15 @@ def main():
             shutil.copytree(src, OUT / asset, dirs_exist_ok=True)
         else:
             shutil.copy(src, OUT / asset)
+    editor = OUT / "editor"
+    shutil.copytree(ROOT / "prototype", editor, dirs_exist_ok=True)
+    editor_index = (editor / "index.html").read_text()
+    (editor / "index.html").write_text(editor_index.replace(
+        '../site/static/style.css', '../style.css').replace(
+        'href="../out/"', 'href="../"'))
+    editor_app = (editor / "app.js").read_text()
+    (editor / "app.js").write_text(editor_app.replace(
+        "from '../site/static/mmp/engine.js'", "from '../mmp/engine.js'"))
     if (ROOT / "figs").exists():
         shutil.copytree(ROOT / "figs", OUT / "figs", dirs_exist_ok=True)
 
