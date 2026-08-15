@@ -86,8 +86,9 @@ body {
 .sidebar-close:hover { color: var(--accent); }
 .booktabs { display: flex; gap: .35rem; margin-bottom: 1.4rem; }
 .booktabs a {
-  flex: 1; min-width: 0; text-align: center; padding: .35rem .5rem; border: 1px solid var(--rule);
-  border-radius: 3px; text-decoration: none; color: var(--muted);
+  flex: 1; min-width: 0; text-align: center; padding: .35rem .3rem; border: 1px solid var(--rule);
+  border-radius: 3px; text-decoration: none; color: var(--muted); font-size: 14px;
+  white-space: nowrap; overflow-wrap: normal;
 }
 .booktabs .editor-tab { color: var(--accent); }
 .sidebar .booktabs a[aria-current] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
