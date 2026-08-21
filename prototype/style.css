@@ -94,18 +94,18 @@ code { color: var(--ink); font: 600 12px var(--mono); }
 .back-link:hover { color: var(--accent); }
 
 .construction-line { stroke: var(--accent); stroke-width: 2.5px; vector-effect: non-scaling-stroke; }
-.construction-line.supporting { stroke: var(--muted); opacity: .48; stroke-width: 1.6px; }
+.construction-line.supporting { stroke: var(--muted); opacity: 1; stroke-width: 1.6px; }
 .construction-line.proof-object { stroke: var(--object-color); opacity: .88; }
-.construction-line.important { stroke: var(--ink); opacity: .9; }
+.construction-line.important { stroke: var(--ink); opacity: 1; }
 .construction-line.focused { opacity: 1; stroke-width: 2.8px; }
 .construction-line.selected { stroke: var(--flag); opacity: 1; stroke-width: 3.2px; }
 .construction-conic { fill: none; stroke: var(--muted); stroke-width: 1.7px; vector-effect: non-scaling-stroke; }
 .construction-conic.proof-object { stroke: var(--object-color); opacity: .88; }
-.construction-conic.important { stroke: var(--ink); opacity: .9; }
+.construction-conic.important { stroke: var(--ink); opacity: 1; }
 .construction-conic.focused { stroke-width: 2.1px; opacity: 1; }
 .construction-conic.selected { stroke: var(--flag); stroke-width: 2.4px; }
 .construction-point { fill: var(--ink); }
-.construction-point.supporting { fill: var(--muted); opacity: .65; }
+.construction-point.supporting { fill: var(--muted); opacity: 1; }
 .construction-point.proof-object { fill: var(--object-color); }
 .construction-point.important { fill: var(--ink); }
 .construction-point.animated { stroke: var(--paper); stroke-width: 1px; vector-effect: non-scaling-stroke; }
@@ -115,12 +115,13 @@ code { color: var(--ink); font: 600 12px var(--mono); }
 .line-hit, .locus-hit { fill: none; stroke: var(--accent); stroke-width: 14px; vector-effect: non-scaling-stroke; pointer-events: stroke; }
 .point-hit { fill: #000; stroke: none; cursor: grab; }
 .construction-preview { stroke: var(--flag); stroke-width: .025; stroke-dasharray: .08 .06; opacity: .75; pointer-events: none; }
-.object-label { fill: var(--muted); font: .085px var(--sans); font-weight: 500; paint-order: stroke; stroke: var(--paper); stroke-width: 1.5px; vector-effect: non-scaling-stroke; pointer-events: none; }
+.object-label { fill: var(--muted); font: .085px var(--math); font-style: italic; font-weight: 500; paint-order: stroke; stroke: var(--paper); stroke-width: 1.5px; vector-effect: non-scaling-stroke; pointer-events: none; }
 .object-label.colored { fill: var(--object-color); }
 .object-label.important { fill: var(--ink); }
 .line-label { font-size: .08px; }
 .degree-badge-ring { fill: var(--paper); stroke: var(--degree-color); stroke-width: 1.4px; vector-effect: non-scaling-stroke; }
-.degree-badge { fill: var(--degree-color); font: .06px var(--sans); font-weight: 600; pointer-events: none; }
+.degree-badge { fill: var(--degree-color); font: .06px var(--math); font-style: normal; font-weight: 600; pointer-events: none; }
+.ideal-point-arrow { fill: none; stroke: var(--object-color, var(--ink)); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
 .toast { position: fixed; right: 1rem; bottom: 1rem; z-index: 10; padding: .4rem .55rem; border: 1px solid var(--rule); color: var(--muted); background: var(--paper); font-size: 12px; opacity: 0; pointer-events: none; }
 .toast.visible { opacity: 1; }
 

@@ -7,7 +7,7 @@ site:                 ## LaTeX -> out/  (needs latexml + ./run.sh deps)
 	$(PY) site/build.py
 
 pdf:                  ## both books as PDF, same sources
-	cd books/rigorous    && TEXINPUTS=../common: latexmk -pdf main.tex
+	cd MMP___Precise_theory && TEXINPUTS=../books/common: latexmk -pdf main.tex
 	cd 'books/MMP___For_contestants (1)' && TEXINPUTS=../common: latexmk -pdf main.tex
 	cd 'books/MMP___For_contestants (1)' && TEXINPUTS=../common: latexmk -pdf main.tex  # resolve references
 

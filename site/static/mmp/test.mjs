@@ -91,6 +91,11 @@ q = parallel P L
 `;
 check('parallel degree', degrees(parallel).steps.find((s) => s.name === 'q').degree, 0);
 
+const ideal = `${parallel}\nI = dir L 1`;
+const idealData = degrees(ideal).steps.find((s) => s.name === 'I');
+check('ideal point degree', idealData.degree, 0);
+check('ideal point at infinity', coords(ideal, 0).env.I[2], 0);
+
 const angle = `
 A = free 0 1
 B = free 0 0

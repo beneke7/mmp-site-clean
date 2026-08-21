@@ -11,6 +11,18 @@ const el = (tag, attrs = {}) => {
   return node;
 };
 
+function appletMeta(src) {
+  const example = /^\s*#\s*(?:interface|mode)\s*[:=]\s*example\b/im.test(src);
+  const degrees = new Map();
+  for (const line of src.split('\n')) {
+    const match = /^\s*#\s*(?:degree|published)\s+(\w+)\s*[:=]\s*(-?\d+)\s*$/i.exec(line);
+    if (match) degrees.set(match[1], Number(match[2]));
+  }
+  return { example, degrees };
+}
+
+const publishedDegree = (step, meta) => step && (meta.degrees.get(step.name) ?? step.degree);
+
 function expandApplet(box) {
   const pane = document.getElementById('pane');
   const paneBody = pane?.querySelector('.pane-body');
@@ -58,6 +70,15 @@ function circleGeometry(value) {
   return radius2 > 1e-9 ? { x, y, radius: Math.sqrt(radius2) } : null;
 }
 
+function idealPointAt(step, run, view) {
+  const line = run.env[step.args[0]], segment = line && clipLine(line[0], line[1], line[2], view);
+  if (!segment) return null;
+  const endIndex = step.args[1] === '1' ? 1 : 0;
+  const end = segment[endIndex], start = segment[1 - endIndex];
+  const length = Math.hypot(end[0] - start[0], end[1] - start[1]);
+  return length > 1e-9 ? { x: end[0], y: end[1], ux: (end[0] - start[0]) / length, uy: (end[1] - start[1]) / length } : null;
+}
+
 function pointXY(value) {
   if (!value || Math.abs(value[2]) < 1e-9) return null;
   const x = value[0] / value[2], y = value[1] / value[2];
@@ -100,13 +121,14 @@ function degreeColorMap(computed) {
   return new Map(names.map((name, index) => [name, PROOF_COLORS[index % PROOF_COLORS.length]]));
 }
 
-function render(svg, src, prog, t, computed, view, showDegrees) {
+function render(svg, src, prog, t, computed, view, showDegrees, constructionLimit, showAllDegrees, meta) {
   svg.textContent = '';
   svg.setAttribute('viewBox', `${view.x0} ${-(view.y0 + view.h)} ${view.w} ${view.h}`);
   const run = coords(src, t);
 
   const claimNames = new Set(computed.steps.filter((step) => step.claim).flatMap((step) => step.args));
   const degreeNames = new Set(computed.steps.filter((step) => step.name && step.degree != null && step.degree > 0).map((step) => step.name));
+  const shownDegreeNames = new Set(computed.steps.filter((step) => step.name && step.degree != null && (showAllDegrees || step.degree > 0)).map((step) => step.name));
   const colors = degreeColorMap(computed);
   const degreeData = new Map(computed.steps.filter((step) => step.name).map((step) => [step.name, step]));
   const units = view.w / Math.max(1, svg.getBoundingClientRect().width || 600);
@@ -117,12 +139,32 @@ function render(svg, src, prog, t, computed, view, showDegrees) {
     conicLayer.appendChild(el('circle', { cx: 0, cy: 0, r: 1, class: 'mmp-conic mmp-supporting' }));
   }
 
+  let constructionCount = 0;
   for (const step of run.steps) {
     if (!step.name || step.hidden) continue;
+    if (constructionCount++ >= constructionLimit) break;
     const role = roleFor(step.name, degreeNames, claimNames, colors);
     const color = colors.get(step.name);
     const style = color ? `--object-color:${color}` : '';
     const classes = `mmp-${role}`;
+    if (step.op === 'dir' && Math.abs(step.value[2]) < 1e-9) {
+      const ideal = idealPointAt(step, run, view);
+      if (!ideal) continue;
+      const inset = 9 * units, tip = { x: ideal.x - ideal.ux * inset, y: ideal.y - ideal.uy * inset };
+      const tipY = -tip.y, sx = ideal.ux, sy = -ideal.uy, size = 18 * units, wing = size * .45;
+      const base = { x: tip.x - sx * size, y: tipY - sy * size };
+      const left = { x: base.x + sy * wing, y: base.y - sx * wing };
+      const right = { x: base.x - sy * wing, y: base.y + sx * wing };
+      lineLayer.appendChild(el('path', { d: `M ${left.x} ${left.y} L ${tip.x} ${tipY} L ${right.x} ${right.y}`, class: `mmp-ideal-arrow ${classes}`, style }));
+      pointLayer.appendChild(el('circle', { cx: tip.x, cy: tipY, r: 5 * units, class: `mmp-point ${classes}`, style }));
+      if (shownDegreeNames.has(step.name)) {
+        const [labelX, labelY] = labelPosition(tip.x, tipY, step.name, occupied, false, units);
+        labelLayer.appendChild(Object.assign(el('text', { x: labelX, y: labelY, class: `mmp-label ${classes}`, style: `${style};font-size:${15 * units}px` }), { textContent: step.name }));
+        const degree = publishedDegree(degreeData.get(step.name), meta);
+        if (showDegrees && degree != null) addDegreeBadge(degreeLayer, labelX + Math.max(4, step.name.length * 8) * units + 4 * units, labelY - 2 * units, degree, color, occupied, units);
+      }
+      continue;
+    }
     if (step.kind === 'conic') {
       const circle = circleGeometry(step.value);
       if (circle) conicLayer.appendChild(el('circle', { cx: circle.x, cy: -circle.y, r: circle.radius, class: `mmp-conic ${classes}`, style }));
@@ -132,14 +174,14 @@ function render(svg, src, prog, t, computed, view, showDegrees) {
       const segment = clipLine(step.value[0], step.value[1], step.value[2], view);
       if (!segment) continue;
       lineLayer.appendChild(el('line', { x1: segment[0][0], y1: -segment[0][1], x2: segment[1][0], y2: -segment[1][1], class: `mmp-line ${classes}`, style }));
-      if (degreeNames.has(step.name) || claimNames.has(step.name)) {
+      if (shownDegreeNames.has(step.name) || claimNames.has(step.name)) {
         const args = step.args.map((name) => pointXY(run.env[name])).filter(Boolean);
         const anchor = args.length > 1 ? [(args[0][0] + args[1][0]) / 2, (args[0][1] + args[1][1]) / 2] : args[0] || [(segment[0][0] + segment[1][0]) / 2, (segment[0][1] + segment[1][1]) / 2];
         const [x, y] = labelPosition(anchor[0], -anchor[1], step.name, occupied, true, units);
         const label = Object.assign(el('text', { x, y, class: `mmp-label ${classes}`, style: `${style};font-size:${13 * units}px` }), { textContent: step.name });
         labelLayer.appendChild(label);
-        const degree = degreeData.get(step.name)?.degree;
-        if (showDegrees && degree != null && degreeNames.has(step.name)) addDegreeBadge(degreeLayer, x + Math.max(4, step.name.length * 7) * units + 4 * units, y - 2 * units, degree, color, occupied, units);
+        const degree = publishedDegree(degreeData.get(step.name), meta);
+        if (showDegrees && degree != null && shownDegreeNames.has(step.name)) addDegreeBadge(degreeLayer, x + Math.max(4, step.name.length * 7) * units + 4 * units, y - 2 * units, degree, color, occupied, units);
       }
       continue;
     }
@@ -149,8 +191,8 @@ function render(svg, src, prog, t, computed, view, showDegrees) {
     pointLayer.appendChild(el('circle', { cx: x, cy: -y, r: 5 * units, class: `mmp-point ${classes}${step.args.includes('$t') ? ' mmp-animated' : ''}`, style }));
     const [labelX, labelY] = labelPosition(x, -y, step.name, occupied, false, units);
     labelLayer.appendChild(Object.assign(el('text', { x: labelX, y: labelY, class: `mmp-label ${classes}`, style: `${style};font-size:${15 * units}px` }), { textContent: step.name }));
-    const degree = degreeData.get(step.name)?.degree;
-    if (showDegrees && degree != null && degreeNames.has(step.name)) addDegreeBadge(degreeLayer, labelX + Math.max(4, step.name.length * 8) * units + 4 * units, labelY - 2 * units, degree, color, occupied, units);
+    const degree = publishedDegree(degreeData.get(step.name), meta);
+    if (showDegrees && degree != null && shownDegreeNames.has(step.name)) addDegreeBadge(degreeLayer, labelX + Math.max(4, step.name.length * 8) * units + 4 * units, labelY - 2 * units, degree, color, occupied, units);
   }
 }
 
@@ -163,7 +205,7 @@ function stepText(step) {
     perpline: `through ${step.args[0]}, perpendicular to ${step.args[1]}`,
     circle: 'point on the unit circle', circlepoint: `point on ${step.args[0]}`,
     circlecenter: `circle through ${args}`, circumcircle: `circle through ${args}`,
-    free: 'fixed point', on: `on line ${args}`, online: `on line ${step.args[0]}`,
+    free: 'fixed point', on: `on line ${args}`, online: `on line ${step.args[0]}`, dir: `ideal point of ${step.args[0]}`,
   }[step.op] || `${step.op} ${args}`);
 }
 
@@ -184,6 +226,23 @@ export function initApplets(root = document) {
     try { prog = parse(src); computed = degrees(src); }
     catch (error) { box.querySelector('.mmp-error').textContent = 'Construction error: ' + error.message; continue; }
 
+    const meta = appletMeta(src);
+    meta.example ||= box.dataset.interface === 'example';
+    const constructionCount = prog.filter((step) => !step.claim).length;
+    const constructionSlider = box.querySelector('.mmp-construction-slider');
+    const constructionValue = box.querySelector('.mmp-construction-value');
+    let constructionStep = constructionCount;
+    if (constructionSlider) {
+      constructionSlider.max = String(constructionCount);
+      const value = Number(constructionSlider.value);
+      constructionStep = Number.isFinite(value) ? Math.min(constructionCount, Math.max(0, value)) : constructionCount;
+      constructionSlider.value = String(constructionStep);
+    }
+    if (meta.example) {
+      box.classList.add('mmp-example');
+      box.querySelector('[data-act="check"]')?.remove();
+      box.querySelector('[data-act="reveal"]')?.remove();
+    }
     box.classList.add('is-live');
     const svg = el('svg', { class: 'mmp-canvas', role: 'img', 'aria-label': 'Interactive geometric construction' });
     box.querySelector('.mmp-figure').replaceChildren(svg);
@@ -195,13 +254,14 @@ export function initApplets(root = document) {
     const list = box.querySelector('.mmp-steps');
     const inputs = new Map();
     let view = { ...BASE_VIEW };
-    let showDegrees = box.dataset.degreesShown === 'true';
+    let showDegrees = meta.example || box.dataset.degreesShown === 'true';
     let pan = null;
 
     const slider = box.querySelector('.mmp-slider');
     const parameter = () => Math.tan(parseFloat(slider.value) * Math.PI / 2 * 0.98);
     const draw = () => {
-      try { render(svg, src, prog, parameter(), computed, view, showDegrees); }
+      if (constructionValue) constructionValue.textContent = constructionStep >= constructionCount ? 'all' : `${constructionStep}/${constructionCount}`;
+      try { render(svg, src, prog, parameter(), computed, view, showDegrees, constructionStep, meta.example, meta); }
       catch (error) { box.querySelector('.mmp-error').textContent = `Applet error: ${error.message}`; console.error(error); }
     };
 
@@ -219,13 +279,19 @@ export function initApplets(root = document) {
           const name = Object.assign(document.createElement('code'), { textContent: step.name });
           if (colors.has(step.name)) name.style.color = colors.get(step.name);
           row.append(name, document.createTextNode(' — ' + stepText(step) + ' ('));
-          const input = Object.assign(document.createElement('input'), { type: 'text', inputMode: 'numeric', size: 2, className: 'mmp-input' });
-          input.setAttribute('aria-label', `degree of ${step.name}`);
-          inputs.set(input, step);
-          row.append(input, ')');
-          if (step.coincidences) {
-            const why = Object.assign(document.createElement('span'), { className: 'mmp-why', textContent: `${step.naiveDegree} − ${step.coincidences}` });
-            row.append(' ', why);
+          if (meta.example) {
+            const degree = Object.assign(document.createElement('span'), { className: 'mmp-example-degree', textContent: publishedDegree(step, meta) ?? '—' });
+            if (colors.has(step.name)) degree.style.color = colors.get(step.name);
+            row.append(degree, ')');
+          } else {
+            const input = Object.assign(document.createElement('input'), { type: 'text', inputMode: 'numeric', size: 2, className: 'mmp-input' });
+            input.setAttribute('aria-label', `degree of ${step.name}`);
+            inputs.set(input, step);
+            row.append(input, ')');
+            if (step.coincidences) {
+              const why = Object.assign(document.createElement('span'), { className: 'mmp-why', textContent: `${step.naiveDegree} − ${step.coincidences}` });
+              row.append(' ', why);
+            }
           }
         }
         list.append(row);
@@ -233,6 +299,10 @@ export function initApplets(root = document) {
     }
 
     slider.addEventListener('input', draw);
+    constructionSlider?.addEventListener('input', () => {
+      constructionStep = Math.max(0, Math.min(constructionCount, Number(constructionSlider.value)));
+      draw();
+    });
     svg.addEventListener('pointerdown', (event) => {
       if (event.button !== 0) return;
       pan = { x: event.clientX, y: event.clientY, view: { ...view } };
@@ -265,16 +335,20 @@ export function initApplets(root = document) {
     box.querySelector('[data-act="check"]')?.addEventListener('click', () => {
       for (const [input, step] of inputs) {
         const given = input.value.trim(), right = given !== '' && step.degree != null && Number(given) === Number(step.degree);
+        input.closest('.mmp-step')?.classList.toggle('has-answer', given !== '');
         input.classList.toggle('is-right', right);
         input.classList.toggle('is-wrong', given !== '' && !right);
       }
-      box.classList.add('show-why');
     });
     box.querySelector('[data-act="reveal"]')?.addEventListener('click', () => {
       showDegrees = true;
       box.dataset.degreesShown = 'true';
-      for (const [input, step] of inputs) { input.value = step.degree ?? ''; input.classList.add('is-right'); }
-      box.classList.add('show-why');
+      for (const [input, step] of inputs) {
+        input.value = publishedDegree(step, meta) ?? '';
+        input.classList.toggle('is-right', step.degree != null);
+        input.classList.remove('is-wrong');
+        input.closest('.mmp-step')?.classList.toggle('has-answer', input.value !== '');
+      }
       draw();
     });
     renderWorksheet();

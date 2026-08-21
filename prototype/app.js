@@ -33,7 +33,7 @@ const TOOLS = [
   { group: 'Construct', id: 'perpendicular', label: 'Perpendicular', icon: 'perpendicular', action: 'pick', op: 'perpline', pick: ['point', 'line'] },
   { group: 'Construct', id: 'bisector', label: 'Perpendicular bisector', icon: 'bisector', action: 'pick', op: 'perpbis', pick: ['point', 'point'] },
   { group: 'Construct', id: 'parallel', label: 'Parallel', icon: 'parallel', action: 'pick', op: 'parallel', pick: ['point', 'line'] },
-  { group: 'Construct', id: 'direction', label: 'Direction', icon: 'direction', action: 'pick', op: 'dir', pick: ['line'] },
+  { group: 'Construct', id: 'ideal-point', label: 'Ideal point', icon: 'direction', action: 'pick', op: 'dir', pick: ['line'] },
   { group: 'Construct', id: 'perp-direction', label: 'Perpendicular direction', icon: 'perpendicular', action: 'pick', op: 'perpdir', pick: ['line'] },
 
   { group: 'Transform', id: 'reflect-line', label: 'Reflect · line', icon: 'reflect-line', action: 'pick', op: 'reflectline', pick: ['point', 'line'] },
@@ -74,6 +74,8 @@ let state;
 const undoStack = [];
 const redoStack = [];
 let sidebarResize = null;
+let labelPositions = new Map();
+let degreePositions = new Map();
 
 function rational(value) {
   const text = String(value).trim();
@@ -159,7 +161,8 @@ function source() {
     const args = s.args.map((arg, index) => (
       s.op === 'circle' || (s.op === 'on' && index === 2) || (s.op === 'online' && index === 1) || (s.op === 'circlepoint' && index >= 2)
     ) ? rational(arg) : arg);
-    return `${s.name} = ${s.op} ${args.join(' ')}${s.note ? ` # ${s.note}` : ''}`;
+    const end = s.op === 'dir' && (s.end === 0 || s.end === 1) ? ` ${s.end}` : '';
+    return `${s.name} = ${s.op} ${args.join(' ')}${end}${s.note ? ` # ${s.note}` : ''}`;
   }));
   if (state.claim.args.length === 3 && state.claim.args.every(Boolean)) {
     lines.push(`claim ${state.claim.op} ${state.claim.args.join(' ')}`);
@@ -504,7 +507,16 @@ function lineLabelAnchor(step, drawn, segment) {
   return [(segment[0][0] + segment[1][0]) / 2, (segment[0][1] + segment[1][1]) / 2];
 }
 
-function labelPosition(x, y, text, occupied, line = false, unitsPerPixel = 1) {
+function idealPointAt(step, drawn) {
+  const line = drawn.env[step.args[0]], segment = line && clipLine(line[0], line[1], line[2]);
+  if (!segment) return null;
+  const endIndex = step.end === 1 ? 1 : 0;
+  const end = segment[endIndex], start = segment[1 - endIndex];
+  const length = Math.hypot(end[0] - start[0], end[1] - start[1]);
+  return length > 1e-9 ? { x: end[0], y: end[1], ux: (end[0] - start[0]) / length, uy: (end[1] - start[1]) / length } : null;
+}
+
+function labelPosition(x, y, text, occupied, line = false, unitsPerPixel = 1, key = '') {
   const width = Math.max(4, text.length * (line ? 7 : 8)) * unitsPerPixel;
   const height = (line ? 13 : 15) * unitsPerPixel;
   const gap = 8 * unitsPerPixel;
@@ -512,14 +524,20 @@ function labelPosition(x, y, text, occupied, line = false, unitsPerPixel = 1) {
     ? [[gap, -gap], [gap, 2 * gap], [-width - gap, -gap], [-width - gap, 2 * gap]]
     : [[10 * unitsPerPixel, -12 * unitsPerPixel], [10 * unitsPerPixel, 18 * unitsPerPixel], [-width - 10 * unitsPerPixel, -12 * unitsPerPixel], [-width - 10 * unitsPerPixel, 18 * unitsPerPixel], [14 * unitsPerPixel, 4 * unitsPerPixel], [-width - 14 * unitsPerPixel, 4 * unitsPerPixel]];
   const overlaps = (rect) => occupied.some((other) => rect.x < other.x + other.w && rect.x + rect.w > other.x && rect.y < other.y + other.h && rect.y + rect.h > other.y);
-  for (const [dx, dy] of candidates) {
+  const place = (dx, dy) => {
     const tx = x + dx, ty = y + dy;
-    const rect = { x: tx - 2 * unitsPerPixel, y: ty - height, w: width, h: height * 1.2 };
-    if (!overlaps(rect)) { occupied.push(rect); return [tx, ty]; }
+    occupied.push({ x: tx - 2 * unitsPerPixel, y: ty - height, w: width, h: height * 1.2 });
+    if (key) labelPositions.set(key, [dx / unitsPerPixel, dy / unitsPerPixel]);
+    return [tx, ty];
+  };
+  const remembered = key && labelPositions.get(key);
+  if (remembered) return place(remembered[0] * unitsPerPixel, remembered[1] * unitsPerPixel);
+  for (const [dx, dy] of candidates) {
+    const rect = { x: x + dx - 2 * unitsPerPixel, y: y + dy - height, w: width, h: height * 1.2 };
+    if (!overlaps(rect)) return place(dx, dy);
   }
   const [dx, dy] = candidates[0];
-  occupied.push({ x: x + dx - 2 * unitsPerPixel, y: y + dy - height, w: width, h: height * 1.2 });
-  return [x + dx, y + dy];
+  return place(dx, dy);
 }
 
 function labelStyle(color, size, unitsPerPixel) {
@@ -562,6 +580,32 @@ function renderCanvas(computed) {
     const labelTone = color ? ' colored' : relevant ? ' important' : '';
     const showDegree = state.showDegrees.has(step.name);
     const labelled = focused || showDegree;
+    if (step.op === 'dir' && Math.abs(value[2]) < 1e-9) {
+      const ideal = idealPointAt(step, drawn);
+      if (!ideal) continue;
+      const inset = pointRadius * 1.8;
+      const tip = { x: ideal.x - ideal.ux * inset, y: ideal.y - ideal.uy * inset };
+      const tipY = -tip.y, sx = ideal.ux, sy = -ideal.uy, size = 18 * unitsPerPixel, wing = size * .45;
+      const base = { x: tip.x - sx * size, y: tipY - sy * size };
+      const left = { x: base.x + sy * wing, y: base.y - sx * wing };
+      const right = { x: base.x - sy * wing, y: base.y + sx * wing };
+      lineLayer.appendChild(svgEl('path', {
+        d: `M ${left.x} ${left.y} L ${tip.x} ${tipY} L ${right.x} ${right.y}`,
+        class: 'ideal-point-arrow', style: color ? `--object-color:${color}` : '',
+      }));
+      pointLayer.appendChild(svgEl('circle', {
+        cx: tip.x, cy: tipY, r: focused ? focusedPointRadius : pointRadius,
+        class: `construction-point${visualRole}${focused ? ' focused' : ''}${state.picks.includes(step.name) ? ' selected' : ''}`,
+        style: color ? `--object-color:${color}` : '',
+      }));
+      if (labelled) {
+        const [labelX, labelY] = labelPosition(tip.x, tipY, step.name, occupiedLabels, false, unitsPerPixel, step.name);
+        labelLayer.appendChild(Object.assign(svgEl('text', { x: labelX, y: labelY, class: `object-label${labelTone}`, style: labelStyle(color, 15, unitsPerPixel) }), { textContent: step.name }));
+        if (showDegree && expected(computed, step.name) != null) addDegreeBadge(labelLayer, labelX + Math.max(4, step.name.length * 8) * unitsPerPixel + 4 * unitsPerPixel, labelY - 2 * unitsPerPixel, expected(computed, step.name), color || 'var(--muted)', occupiedLabels, unitsPerPixel, step.name);
+      }
+      pointHits.push(svgEl('circle', { cx: tip.x, cy: tipY, r: pointHitRadius, class: 'object-hit point-hit', 'data-object': step.name, 'data-kind': 'point' }));
+      continue;
+    }
     if (step.kind === 'conic') {
       const circle = circleGeometry(value);
       if (!circle) continue;
@@ -590,11 +634,11 @@ function renderCanvas(computed) {
         const anchor = lineLabelAnchor(step, drawn, segment);
         const x = anchor[0], y = -anchor[1];
         const text = step.name;
-        const [labelX, labelY] = labelPosition(x, y, text, occupiedLabels, true, unitsPerPixel);
+        const [labelX, labelY] = labelPosition(x, y, text, occupiedLabels, true, unitsPerPixel, step.name);
         const label = svgEl('text', { x: labelX, y: labelY, class: `object-label line-label${labelTone}`, style: labelStyle(color, 13, unitsPerPixel) });
         label.textContent = text;
         labelLayer.appendChild(label);
-        if (showDegree && expected(computed, step.name) != null) addDegreeBadge(labelLayer, labelX + Math.max(4, text.length * 7) * unitsPerPixel + 4 * unitsPerPixel, labelY - 2 * unitsPerPixel, expected(computed, step.name), color || 'var(--muted)', occupiedLabels, unitsPerPixel);
+        if (showDegree && expected(computed, step.name) != null) addDegreeBadge(labelLayer, labelX + Math.max(4, text.length * 7) * unitsPerPixel + 4 * unitsPerPixel, labelY - 2 * unitsPerPixel, expected(computed, step.name), color || 'var(--muted)', occupiedLabels, unitsPerPixel, step.name);
       }
       shapeHits.push(svgEl('line', {
         x1: segment[0][0], y1: -segment[0][1], x2: segment[1][0], y2: -segment[1][1],
@@ -612,11 +656,11 @@ function renderCanvas(computed) {
     }));
     if (visible.has(step.name)) {
       const text = step.name;
-      const [labelX, labelY] = labelPosition(x, -y, text, occupiedLabels, false, unitsPerPixel);
+      const [labelX, labelY] = labelPosition(x, -y, text, occupiedLabels, false, unitsPerPixel, step.name);
       const label = svgEl('text', { x: labelX, y: labelY, class: `object-label${labelTone}`, style: labelStyle(color, 15, unitsPerPixel) });
       label.textContent = text;
       labelLayer.appendChild(label);
-      if (showDegree && expected(computed, step.name) != null) addDegreeBadge(labelLayer, labelX + Math.max(4, text.length * 8) * unitsPerPixel + 4 * unitsPerPixel, labelY - 2 * unitsPerPixel, expected(computed, step.name), color || 'var(--muted)', occupiedLabels, unitsPerPixel);
+      if (showDegree && expected(computed, step.name) != null) addDegreeBadge(labelLayer, labelX + Math.max(4, text.length * 8) * unitsPerPixel + 4 * unitsPerPixel, labelY - 2 * unitsPerPixel, expected(computed, step.name), color || 'var(--muted)', occupiedLabels, unitsPerPixel, step.name);
     }
     pointHits.push(svgEl('circle', {
       cx: x, cy: -y, r: focused ? 17 * unitsPerPixel : pointHitRadius,
@@ -627,7 +671,7 @@ function renderCanvas(computed) {
   shapeHits.concat(pointHits).forEach((target) => canvas.appendChild(target));
 }
 
-function addDegreeBadge(layer, x, y, degree, color, occupied, unitsPerPixel) {
+function addDegreeBadge(layer, x, y, degree, color, occupied, unitsPerPixel, key = '') {
   const text = String(degree);
   const radius = 7 * unitsPerPixel;
   const offset = 2.5 * radius;
@@ -636,9 +680,13 @@ function addDegreeBadge(layer, x, y, degree, color, occupied, unitsPerPixel) {
     const rect = { x: cx - radius, y: cy - radius, w: radius * 2, h: radius * 2 };
     return occupied.some((other) => rect.x < other.x + other.w && rect.x + rect.w > other.x && rect.y < other.y + other.h && rect.y + rect.h > other.y);
   };
-  const [cx, cy] = candidates.find(([candidateX, candidateY]) => !overlaps(candidateX, candidateY)) || candidates[0];
+  const remembered = key && degreePositions.get(key);
+  const [cx, cy] = remembered
+    ? [x + remembered[0] * unitsPerPixel, y + remembered[1] * unitsPerPixel]
+    : candidates.find(([candidateX, candidateY]) => !overlaps(candidateX, candidateY)) || candidates[0];
   const rect = { x: cx - radius, y: cy - radius, w: radius * 2, h: radius * 2 };
   occupied.push(rect);
+  if (key && !remembered) degreePositions.set(key, [(cx - x) / unitsPerPixel, (cy - y) / unitsPerPixel]);
   layer.append(
     svgEl('circle', { cx, cy, r: radius, class: 'degree-badge-ring', style: `--degree-color:${color}` }),
     Object.assign(svgEl('text', { x: cx, y: cy, class: 'degree-badge', 'text-anchor': 'middle', 'dominant-baseline': 'central', style: `--degree-color:${color};font-size:${11 * unitsPerPixel}px` }), { textContent: text }),
@@ -675,6 +723,8 @@ function removeObject(name) {
     state.focus.delete(objectName);
     state.showDegrees.delete(objectName);
     delete state.answers[objectName];
+    labelPositions.delete(objectName);
+    degreePositions.delete(objectName);
   }
   state.picks = [];
   const available = claimChoices(state.claim.op).map((object) => object.name);
@@ -884,7 +934,7 @@ function importConstruction(payload) {
   const steps = payload.steps.map((step) => {
     if (!/^\w+$/.test(step.name) || !/^\w+$/.test(step.op) || !Array.isArray(step.args) || names.has(step.name)) throw new Error('invalid construction step');
     names.add(step.name);
-    return { name: step.name, op: step.op, tool: step.tool, shape: step.shape, args: step.args.map(String), note: step.note };
+    return { name: step.name, op: step.op, tool: step.tool, shape: step.shape, args: step.args.map(String), note: step.note, end: step.end };
   });
   checkpoint();
   state.points = points;
@@ -900,6 +950,8 @@ function importConstruction(payload) {
   state.t = Number.isFinite(Number(payload.t)) ? Number(payload.t) : 2;
   state.previewStep = null;
   state.picks = [];
+  labelPositions = new Map();
+  degreePositions = new Map();
   setSliderFromT();
   renderPalette(); renderToolHelp(); refresh();
   toast('Construction imported.');
@@ -927,7 +979,6 @@ function hitObject(event, kind = null) {
       if (!best || distance < best.distance) best = { object, distance };
     }
     if (best && best.distance <= pointPickRadius()) return best.object;
-    if (kinds?.has('point')) return null;
   }
   const nodes = document.elementsFromPoint(event.clientX, event.clientY);
   for (const node of nodes) {
@@ -952,11 +1003,17 @@ function lineParameter(lineName, point) {
   return parameter ?? 0;
 }
 
-function addStep(tool, args, record = true) {
+function lineEndIndex(lineName, point) {
+  const drawn = coords(source(), state.t), line = drawn.env[lineName], segment = line && clipLine(line[0], line[1], line[2]);
+  if (!segment) return 0;
+  return Math.hypot(point.x - segment[1][0], point.y - segment[1][1]) < Math.hypot(point.x - segment[0][0], point.y - segment[0][1]) ? 1 : 0;
+}
+
+function addStep(tool, args, record = true, extra = {}) {
   if (record) checkpoint();
   const kind = OUTPUT_KIND[tool.op] || 'point';
   const name = nextName(kind);
-  state.steps.push({ name, op: tool.op, tool: tool.id, shape: tool.shape, args });
+  state.steps.push({ name, op: tool.op, tool: tool.id, shape: tool.shape, args, ...extra });
   autoShowDegrees([name]);
   state.picks = [];
   refresh(); renderToolHelp();
@@ -1087,7 +1144,10 @@ function handleAuthorClick(event) {
   const picked = pointPick || hitObject(event, expectedKind);
   if (!picked) return toast(`Select a ${expectedKind}.`);
   state.picks.push(picked.name);
-  if (state.picks.length === tool.pick.length) addStep(tool, [...state.picks], !pointPick?.created);
+  if (state.picks.length === tool.pick.length) {
+    const extra = tool.op === 'dir' ? { end: lineEndIndex(state.picks[0], point) } : {};
+    addStep(tool, [...state.picks], !pointPick?.created, extra);
+  }
   else { renderToolHelp(); refresh(); }
 }
 
@@ -1106,7 +1166,7 @@ $('stepSlider').addEventListener('input', () => {
 });
 $('undo').addEventListener('click', undo);
 $('redo').addEventListener('click', redo);
-$('reset').addEventListener('click', () => { checkpoint(); state = freshState(); resetView(); document.documentElement.style.removeProperty('--sidebar'); document.querySelector('.workbench').classList.remove('sidebar-closed'); setSliderFromT(); renderPalette(); renderToolHelp(); refresh(); });
+$('reset').addEventListener('click', () => { checkpoint(); state = freshState(); labelPositions = new Map(); degreePositions = new Map(); resetView(); document.documentElement.style.removeProperty('--sidebar'); document.querySelector('.workbench').classList.remove('sidebar-closed'); setSliderFromT(); renderPalette(); renderToolHelp(); refresh(); });
 
 $('resizeSidebar').addEventListener('pointerdown', (event) => {
   event.preventDefault();

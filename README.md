@@ -10,9 +10,10 @@ books/
   MMP___For_contestants (1)/
     main.tex                the real contestant manuscript and chapter order
     kepek/                  figures used by the manuscript
-  rigorous/
-    main.tex
-    sec/...
+MMP___Precise_theory/
+    main.tex                the precise rigorous manuscript
+    kod.sty                 original PDF style, retained for reference
+    kepek/                  figures used by the manuscript
 figs/gergonne.svg           static figure for the construction demo
 applets/gergonne.mmp        optional: same name -> the figure becomes interactive
 applets/foo.geogebra        optional: a GeoGebra material id, embedded as-is
@@ -175,9 +176,9 @@ Optional: `latexmk` for `make pdf`.
 
 ## What has and hasn't run
 
-`build.py` runs end to end against LaTeXML 0.8.8 and produces 21 contestant
-chapters plus the rigorous book, references, 1,900 labels, 29 manuscript
-figures, working cross-book links, and the existing figure applet. Also tested:
+`build.py` runs end to end against LaTeXML 0.8.8 and produces the 21 contestant
+chapters, the precise rigorous manuscript, references, working cross-book
+links, and the existing figure applet. Also tested:
 `poly.js`, `engine.js`, `test.mjs`, `verify.mjs`, `tools/figure.mjs`, `run.sh`,
 and the generated contestant URLs.
 
@@ -186,9 +187,11 @@ page template have been checked structurally but never rendered in a browser.
 The CI workflow has never run.
 
 The contestant site is sourced from `books/MMP___For_contestants (1)/main.tex`.
-Its original `kod.sty` remains beside the manuscript for reference; the site
-uses the project's smaller `mmp.sty` compatibility layer so LaTeXML can build
-the same text and figures.
+The precise theory site is sourced from `MMP___Precise_theory/main.tex`. Its
+original `kod.sty` remains beside the manuscript for standalone PDF/reference
+use; the integrated site build uses the project's smaller `mmp.sty`
+compatibility layer because LaTeXML cannot process `kod.sty`'s tcolorbox/expl3
+stack.
 
 `out/` is normally generated and gitignored; it is included here only so the
 site can be looked at without installing latexml.

@@ -294,7 +294,7 @@ const ARGS = {
   join: ['point', 'point'], meet: ['line', 'line'],
   meetlinecircle: ['line', 'conic', 'branch'], meetcircles: ['conic', 'conic', 'branch'],
   polar: ['point', '?conic'], midpoint: ['point', 'point'],
-  dir: ['line'], perpdir: ['line'], perpline: ['point', 'line'], parallel: ['point', 'line'],
+  dir: ['line', '?branch'], perpdir: ['line'], perpline: ['point', 'line'], parallel: ['point', 'line'],
   perpbis: ['point', 'point'], anglebis: ['point', 'point', 'point'],
   reflectline: ['point', 'line'], reflectpoint: ['point', 'point'], invert: ['point', '?conic'],
 };
